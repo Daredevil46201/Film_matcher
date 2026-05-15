@@ -29,7 +29,7 @@ def main():
     winners = set.intersection(*players_choices.values())
 
     if len(winners) == 1:
-        return f"\nФильм победитель на вечер {winners}"
+        print(f"\nФильм победитель на вечер {winners}")
     elif len(winners) > 1:
         print("Добро пожаловать в колесо фортуны \nВыберите режим игры: \nПервый победитель - '1' | Русская рулетка - '0'")
         correct_values = [0, 1]
@@ -45,7 +45,7 @@ def main():
                 print("Ошибка. Допустимые значения: Первый победитель - '1' | Русская рулетка - '0'")
         print(spin_wheel(winners, game_mode))
     else:
-        return "\nУвы совпадений нет. Смотрим Уральские пельмени"    
+        print("\nУвы совпадений нет. Смотрим Уральские пельмени")
     
 if __name__ == "__main__":
     main()
