@@ -1,10 +1,61 @@
-from data import movies
+import sys
 from core import user_choice
 from wheel import spin_wheel
+from api_client import get_genres, get_movies, get_tv
+from datetime import date
+
+def ask_year():
+    current_year = date.today().year
+    
+    while True:
+        try:
+            year = int(input("Введите год отсчёта: "))
+            if 1885 <= year <= current_year:
+                return year
+            else:
+                print("Неверный год отсчёта, пожалуйста выберите год в интервале от 1885 до нашего времени")
+                continue
+        except ValueError:
+            print("Неверный тип данных, попробуйте ещё раз")
+
+def ask_genres(film_tv):
+    genre_list = get_genres(film_tv)
+    choose_genres = []
+    print("Вам предлагается выбрать интересующие вас жанры: \nЕсли жанр нравиться нажмите - '1',  если нет - '0'")
+    free_choices = (0,1)
+    for genre in genre_list:
+        while True:
+            try:
+                user_genre = int(input(f'{genre["name"]}: '))
+                if user_genre in free_choices:
+                    break
+                else:
+                    print("Введите '1' или '0'")
+                    continue
+            except ValueError:
+                print("Неверный тип данных, попробуйте ещё раз")
+        if user_genre:
+            choose_genres.append(genre["id"])
+    if choose_genres:
+        return "|".join(map(str,choose_genres))
+    else:
+        return None
 
 def main():
-    print("Добро пожаловать! Вам предлагается выбрать фильм на вечер")
-    print("Если фильм нравится - нажмите '1', если не нравиться - нажмите '0' \nДля остановки выбора фильма наберите - 'стоп' \n")
+    print("Добро пожаловать! Вам предлагается выбрать фильм/сериал на вечер")
+    
+    print("\nЧто вы хотите сегодня посмотреть: \nФильмы - 1, Сериалы - 0")
+    good_value = (0,1)
+    while True:
+        try:
+            film_tv = int(input())
+            if film_tv in good_value:
+                break
+            else:
+                print("Пожалуйста выберите что хотите посмотреть: \nФильмы - 1, Сериалы - 0")
+                continue
+        except ValueError:
+            print("Недопустимое значение. Попробуйте ещё раз")
     
     while True:
         try:
@@ -19,9 +70,28 @@ def main():
 
     players = [i for i in range(1, number_of_players + 1)]
     
+    year = ask_year()
+    genre_ids = ask_genres(film_tv)
+    
+    if genre_ids is None:
+        print("\nУвы один из вас не хочет выбирать ни один из жанров, поэтому совпадений нет. Смотрим Уральские пельмени")
+        sys.exit()
+    
+    print("Если фильм/сериал нравится - нажмите '1', если не нравится - нажмите '0' \nДля остановки выбора фильма/сериала наберите - 'стоп' \n")
+    
     players_choices = {}
+    
+    if film_tv:
+        users_data = get_movies(year,genre_ids)
+    else:
+        users_data = get_tv(year,genre_ids)
+    
+    if not users_data:
+        print("Непредвиденные обстоятельства, мы не смогли найти ни одного фильма/сериала, простите, мы закрываемся")
+        sys.exit()
+    
     for i in players:
-        players_choices[i] = user_choice(i, movies)
+        players_choices[i] = user_choice(i, users_data)
 
     for k, v in players_choices.items():
         print(f"Выбор пользователя №{k}: {v}")
@@ -32,7 +102,7 @@ def main():
         print(f"\nФильм победитель на вечер {winners}")
     elif len(winners) > 1:
         print("Добро пожаловать в колесо фортуны \nВыберите режим игры: \nПервый победитель - '1' | Русская рулетка - '0'")
-        correct_values = [0, 1]
+        correct_values = (0,1)
         while True:
             try:
                 game_mode = int(input())
@@ -46,6 +116,6 @@ def main():
         print(spin_wheel(winners, game_mode))
     else:
         print("\nУвы совпадений нет. Смотрим Уральские пельмени")
-    
+
 if __name__ == "__main__":
     main()

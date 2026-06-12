@@ -14,11 +14,11 @@ def user_choice(user_id, dict_movies):
     print(f"Очередь пользователя №{user_id}:\n")
     player_favorites = set()
     user_want_to_stop = False
-    for k,v in dict_movies.items():
-        print(f"Название: {k} \nЖанр: {v["Genre"]} | Год: {v["Year"]} | Рейтинг: {v["Rate"]}\n")
+    for movie in dict_movies:
+        print(f"Название: {movie["title"]} \nОписание: {movie["overview"]} | Год: {movie["release_date"][:4]} | Рейтинг: {movie["vote_average"]}\n")
         choise = correct_value()
         if choise == 1:
-            player_favorites.add(k)
+            player_favorites.add(movie["title"])
         elif choise == None:
             user_want_to_stop = True
             break
