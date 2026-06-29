@@ -23,7 +23,7 @@
 
 ## Установка:
 1. Клонируйте репозиторий:
-   git clone [url]
+   git clone https://github.com/Daredevil46201/Film_matcher.git
 
 2. Установите зависимости:
    pip install -r requirements.txt
