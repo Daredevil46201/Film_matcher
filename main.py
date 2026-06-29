@@ -1,7 +1,7 @@
 import sys
 from core import user_choice
 from wheel import spin_wheel
-from api_client import get_genres, get_movies, get_tv
+from api_client import get_genres, get_random_movie_list
 from datetime import date
 
 def ask_year():
@@ -18,10 +18,22 @@ def ask_year():
         except ValueError:
             print("Неверный тип данных, попробуйте ещё раз")
 
+def ask_rate():
+    while True:
+        try:
+            rate = float(input("Введите рейтинг отсчёта от 0.0 до 10.0: "))
+            if 0.0 <= rate <=10.0:
+                return rate
+            else:
+                print("Ваш рейтинг должен находиться в интервале от 0.0 до 10.0, попробуйте ещё раз")
+                continue
+        except ValueError:
+            print("Неверный тип данных, попробуйте ещё раз")
+
 def ask_genres(film_tv):
     genre_list = get_genres(film_tv)
-    choose_genres = []
-    print("Вам предлагается выбрать интересующие вас жанры: \nЕсли жанр нравиться нажмите - '1',  если нет - '0'")
+    choose_genres = set()
+    print("Вам предлагается выбрать жанры, которые вы не хотите видеть: \nЕсли жанр не нравиться нажмите - '1',  если хотите его оставить - '0'")
     free_choices = (0,1)
     for genre in genre_list:
         while True:
@@ -35,11 +47,11 @@ def ask_genres(film_tv):
             except ValueError:
                 print("Неверный тип данных, попробуйте ещё раз")
         if user_genre:
-            choose_genres.append(genre["id"])
+            choose_genres.add(genre["id"])
     if choose_genres:
-        return "|".join(map(str,choose_genres))
+        return choose_genres
     else:
-        return None
+        return set()
 
 def main():
     print("Добро пожаловать! Вам предлагается выбрать фильм/сериал на вечер")
@@ -70,31 +82,43 @@ def main():
 
     players = [i for i in range(1, number_of_players + 1)]
     
-    year = ask_year()
-    genre_ids = ask_genres(film_tv)
+    player_rate = []
+    player_year = []
+    no_player_genre = {}
     
-    if genre_ids is None:
-        print("\nУвы один из вас не хочет выбирать ни один из жанров, поэтому совпадений нет. Смотрим Уральские пельмени")
+    for i in players:
+        print(f"Очередь пользователя №{i}:")
+        player_rate.append(ask_rate())
+        player_year.append(ask_year())
+        no_player_genre[i] = ask_genres(film_tv)
+    
+    loosers = set.union(*no_player_genre.values())
+    
+    if len(loosers) == len(get_genres(film_tv)):
+        print("\nУвы один из вас не хочет смотреть ни одного жанра, поэтому мы не сможем найти ни одного фильма. Смотрим Уральские пельмени")
         sys.exit()
+    
+    rate = max(player_rate)
+    year = max(player_year)
+    no_genre = ",".join(map(str,loosers))
     
     print("Если фильм/сериал нравится - нажмите '1', если не нравится - нажмите '0' \nДля остановки выбора фильма/сериала наберите - 'стоп' \n")
     
     players_choices = {}
     
-    if film_tv:
-        users_data = get_movies(year,genre_ids)
-    else:
-        users_data = get_tv(year,genre_ids)
+    print("Загружаем фильмы... Пожалуйста подождите, это может занять некоторое время")
+    users_data = get_random_movie_list(rate,year,no_genre,film_tv)
     
     if not users_data:
         print("Непредвиденные обстоятельства, мы не смогли найти ни одного фильма/сериала, простите, мы закрываемся")
         sys.exit()
     
     for i in players:
-        players_choices[i] = user_choice(i, users_data)
+        players_choices[i] = user_choice(i, users_data, film_tv)
 
     for k, v in players_choices.items():
-        print(f"Выбор пользователя №{k}: {v}")
+        title = {title for title, id in v}
+        print(f"Выбор пользователя №{k}: {title}")
     
     winners = set.intersection(*players_choices.values())
 
