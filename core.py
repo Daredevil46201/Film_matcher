@@ -17,19 +17,22 @@ def user_choice(user_id, dict_movies, film_tv):
     player_favorites = set()
     user_want_to_stop = False
     release = ""
+    name = ""
     if film_tv:
         release = "release_date"
+        name = "title"
     else:
         release = "first_air_date"
+        name = "name"
     for movie in dict_movies:
-        print(f"Название: {movie["title"]}")
+        print(f"Название: {movie[name]}")
         poster_url = get_poster_url(movie.get("poster_path"))
         if poster_url:
             print(f"Постер: {poster_url}")
-        print(f"Описание: {movie["overview"]} | Год: {movie[release][:4]} | Рейтинг: {movie["vote_average"]}\n")
+        print(f"Описание: {movie["overview"]} | Год: {movie[release][:4]} | Рейтинг: {movie["vote_average"]} | Количество оценок: {movie["vote_count"]}\n")
         choise = correct_value()
         if choise == 1:
-            player_favorites.add((movie["title"],movie["id"]))
+            player_favorites.add((movie[name],movie["id"]))
         elif choise == None:
             user_want_to_stop = True
             break
